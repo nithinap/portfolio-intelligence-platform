@@ -1,0 +1,5 @@
+app_env: dev
+log_level: INFO
+database_url: sqlite:///./data/processed/finance_lm_dev.db
+vector_db_provider: pgvector
+vector_db_url: ""

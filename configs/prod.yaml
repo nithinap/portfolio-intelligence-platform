@@ -1,0 +1,5 @@
+app_env: prod
+log_level: INFO
+database_url: postgresql+psycopg://user:pass@db:5432/finance_lm
+vector_db_provider: pgvector
+vector_db_url: postgresql+psycopg://user:pass@db:5432/finance_lm
