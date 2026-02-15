@@ -1,6 +1,6 @@
 # Current Status And Next Steps
 
-Last updated: 2026-02-15 15:20:42 MST
+Last updated: 2026-02-15 15:59:05 MST
 
 ## Progress Summary
 
@@ -39,7 +39,19 @@ Last updated: 2026-02-15 15:20:42 MST
 - Added integration tests covering ingestion and QA behavior.
 - Validation status:
   - `make lint` passing.
-  - `make test` passing (6 tests).
+  - `make test` passing.
+
+### Additional Progress (Post-Phase-1 Slice)
+- Added market data provider abstraction:
+  - `MarketDataProvider` interface with provider selection via settings.
+  - Implemented `StubMarketDataProvider` (default) and `YahooFinanceProvider` (optional).
+- Added market snapshot persistence:
+  - New table `market_price_snapshots` + migration.
+  - Pipeline write path for normalized OHLCV bars.
+- Replaced stub market job behavior:
+  - `run_market_snapshot_job` now fetches provider bars and writes snapshot rows.
+  - Scheduler audit + metrics behavior preserved.
+- Added integration test for market snapshot persistence.
 
 ## What Is Not Built Yet
 - Real market/news/filings connectors (current jobs are stubs).
@@ -50,43 +62,25 @@ Last updated: 2026-02-15 15:20:42 MST
 
 ## Next Steps / Task Backlog
 
-1. Implement market data provider abstraction.
-- Add `MarketDataProvider` interface under ingestion connectors.
-- Keep ingestion pipeline decoupled from specific data vendors.
-
-2. Add first real connector (Yahoo Finance for development).
-- Implement connector methods for OHLCV snapshots.
-- Normalize symbols/timestamps and map to canonical schema.
-
-3. Persist market snapshots.
-- Add new DB table + Alembic migration for price bars.
-- Write ingestion pipeline + audit records for snapshot runs.
-
-4. Replace stub `run_market_snapshot_job`.
-- Wire scheduler job to call connector + persistence layer.
-- Keep existing `JobAudit` logging and metrics.
-
-5. Upgrade retrieval from lexical stub to vector-capable design.
+1. Upgrade retrieval from lexical stub to vector-capable design.
 - Add embedding provider interface.
 - Store embeddings/vector references and keep current retrieval filters.
 - Preserve deterministic fallback mode for local tests.
 
-6. Improve chunking architecture.
+2. Improve chunking architecture.
 - Introduce a chunker interface (`SimpleChunker`, `TokenChunker`).
 - Keep current chunker as default until token-based variant is benchmarked.
 
-7. Add Phase 1 QA quality checks.
+3. Add Phase 1 QA quality checks.
 - Build small curated QA fixture set.
 - Track citation coverage and consistency metrics.
 
-8. Add sentiment pipeline baseline.
+4. Add sentiment pipeline baseline.
 - Ingest sentiment signals by ticker/source/date.
 - Persist aggregates for downstream Phase 2 signal modules.
 
 ## Suggested Immediate Execution Order
 
-1. Market data provider interface + Yahoo connector.
-2. Price snapshot schema + ingestion pipeline wiring.
-3. Scheduler integration replacing stub market job.
-4. Retrieval/embedding interface upgrade.
-5. Chunker interface + token chunking experiment.
+1. Retrieval/embedding interface upgrade.
+2. Chunker interface + token chunking experiment.
+3. QA evaluation checks and reporting.

@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     )
     vector_db_provider: str = Field(default="pgvector", alias="VECTOR_DB_PROVIDER")
     vector_db_url: str | None = Field(default=None, alias="VECTOR_DB_URL")
+    market_data_provider: str = Field(default="stub", alias="MARKET_DATA_PROVIDER")
+    market_data_tickers: str = Field(default="AAPL,MSFT,NVDA", alias="MARKET_DATA_TICKERS")
+    market_data_lookback_days: int = Field(default=5, alias="MARKET_DATA_LOOKBACK_DAYS")
 
 
 def _load_yaml_profile(app_env: str) -> dict[str, Any]:
@@ -42,6 +45,9 @@ def get_settings() -> Settings:
         "DATABASE_URL": yaml_cfg.get("database_url"),
         "VECTOR_DB_PROVIDER": yaml_cfg.get("vector_db_provider"),
         "VECTOR_DB_URL": yaml_cfg.get("vector_db_url"),
+        "MARKET_DATA_PROVIDER": yaml_cfg.get("market_data_provider"),
+        "MARKET_DATA_TICKERS": yaml_cfg.get("market_data_tickers"),
+        "MARKET_DATA_LOOKBACK_DAYS": yaml_cfg.get("market_data_lookback_days"),
     }
     merged = {k: v for k, v in mapped.items() if v is not None}
     return Settings(**merged)

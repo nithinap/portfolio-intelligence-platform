@@ -6,3 +6,4 @@ def test_settings_load_defaults():
     settings = get_settings()
     assert settings.app_name == "finance-lm"
     assert settings.database_url.startswith("sqlite")
+    assert settings.market_data_provider in {"stub", "yahoo"}
