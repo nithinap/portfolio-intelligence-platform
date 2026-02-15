@@ -7,10 +7,24 @@ This repository contains a modular backend architecture for:
 - Paper-trading first, automation later
 
 ## Project Status
-Phase 0 baseline is complete and an initial Phase 1 vertical slice is available:
-- document ingestion endpoint with chunking
-- lexical retrieval with filters
-- grounded `/qa` endpoint with citations + confidence
+Phase 0 baseline is complete. Phase 1 is in progress with a working vertical slice.
+
+Current capabilities:
+- FastAPI baseline endpoints: `/health/live`, `/health/ready`, `/version`, `/metrics`
+- Document ingestion with chunking: `POST /documents/ingest`
+- Grounded Q&A with citations and confidence: `POST /qa`
+- Lexical retrieval with ticker/source/date filtering
+- Database migrations, seed data, scheduler framework, and job audit logging
+- CI checks for lint and tests
+
+Known limitations (current state):
+- Market/news/filings connectors are still stubs
+- Retrieval is lexical fallback (no real embedding/vector index yet)
+- QA answer synthesis is deterministic (no LLM integration yet)
+- Sentiment pipeline and Phase 1 evaluation metrics are not implemented yet
+
+Detailed running status and task tracker:
+- `docs/plans/current-status-and-next-steps.md`
 
 ## Quickstart (Phase 0)
 1. `cp .env.example .env`
@@ -117,5 +131,8 @@ curl -X POST http://localhost:8000/qa \
 - MLflow (or W&B) for experiment/version tracking
 - OpenTelemetry + Prometheus/Grafana for observability
 
-## Next Step
-Move to Phase 1 in `docs/plans/implementation-backlog.md` after wiring real connectors and RAG indexing.
+## Immediate Priorities
+1. Add market data provider abstraction and initial Yahoo Finance connector.
+2. Persist normalized OHLCV snapshots with migration + ingestion job wiring.
+3. Replace stub market snapshot job with real connector-backed ingestion.
+4. Add embedding/vector retrieval path while preserving current filter contract.
