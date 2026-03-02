@@ -1,6 +1,9 @@
 from fastapi.testclient import TestClient
+from sqlalchemy import func, select
 
 from src.api.main import app
+from src.common.db import SessionLocal
+from src.core.models import Signal
 
 
 def test_health_endpoints():
@@ -119,3 +122,32 @@ def test_qa_evaluate_endpoint():
         assert body["total_cases"] == 1
         assert body["citation_coverage"] >= 1.0
         assert body["cases"][0]["passed"] is True
+
+
+def test_sentiment_compute_endpoint():
+    with TestClient(app) as client:
+        ingest_payload = {
+            "documents": [
+                {
+                    "source": "unit-test-sentiment",
+                    "ticker": "NVDA",
+                    "title": "Positive trend",
+                    "content": "Strong growth accelerated and margins improved with record demand.",
+                }
+            ]
+        }
+        ingest = client.post("/documents/ingest", json=ingest_payload)
+        assert ingest.status_code == 200
+
+        compute_payload = {"ticker": "NVDA", "source": "unit-test-sentiment"}
+        compute = client.post("/signals/sentiment/compute", json=compute_payload)
+        assert compute.status_code == 200
+        body = compute.json()
+        assert body["rows_written"] >= 1
+
+    with SessionLocal() as session:
+        total = session.scalar(
+            select(func.count()).select_from(Signal).where(Signal.signal_type == "sentiment_daily")
+        )
+        assert total is not None
+        assert total >= 1

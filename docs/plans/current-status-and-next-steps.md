@@ -1,6 +1,6 @@
 # Current Status And Next Steps
 
-Last updated: 2026-03-01 22:33:18 MST
+Last updated: 2026-03-01 22:35:24 MST
 
 ## Progress Summary
 
@@ -40,6 +40,9 @@ Last updated: 2026-03-01 22:33:18 MST
   - `POST /qa` returns answer, confidence, and citations.
 - Added QA evaluation checks:
   - `POST /qa/evaluate` returns pass rate, citation coverage, and per-case failures.
+- Added sentiment signal baseline:
+  - `POST /signals/sentiment/compute` aggregates document sentiment into `signals`.
+  - Baseline scoring uses deterministic positive/negative keyword lexicon.
 - Added ingestion API route:
   - `POST /documents/ingest`.
 - Added integration tests covering ingestion and QA behavior.
@@ -72,16 +75,16 @@ Last updated: 2026-03-01 22:33:18 MST
 - Benchmark current chunking defaults on retrieval quality and latency.
 - Decide default provider by environment (`simple` for local, `token` for production).
 
-2. Add sentiment pipeline baseline.
-- Ingest sentiment signals by ticker/source/date.
-- Persist aggregates for downstream Phase 2 signal modules.
-
-3. Add model-backed QA generation.
+2. Add model-backed QA generation.
 - Keep citation and filter constraints as hard requirements.
 - Compare answer quality vs deterministic baseline.
+
+3. Improve sentiment scoring quality.
+- Replace lexicon-only baseline with model-based scoring.
+- Add calibration and backtests for sentiment utility.
 
 ## Suggested Immediate Execution Order
 
 1. Chunking benchmark and default-provider decision.
-2. Sentiment pipeline baseline with persisted aggregates.
-3. Model-backed QA generation with grounding constraints.
+2. Model-backed QA generation with grounding constraints.
+3. Sentiment scoring upgrade and validation.

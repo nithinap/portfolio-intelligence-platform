@@ -49,6 +49,7 @@ Validation:
 - `POST /qa/evaluate`
 - `POST /market/snapshots/fetch`
 - `GET /market/snapshots`
+- `POST /signals/sentiment/compute`
 
 Example ingestion request:
 
@@ -93,6 +94,17 @@ curl -X POST http://localhost:8000/qa/evaluate \
         "min_confidence": 0.1
       }
     ]
+  }'
+```
+
+Example sentiment compute request:
+
+```bash
+curl -X POST http://localhost:8000/signals/sentiment/compute \
+  -H "content-type: application/json" \
+  -d '{
+    "ticker": "AAPL",
+    "source": "news"
   }'
 ```
 
@@ -177,5 +189,5 @@ curl "http://localhost:8000/market/snapshots?ticker=AAPL&limit=10"
 
 ## Immediate Priorities
 1. Benchmark chunking strategies and set environment-specific defaults.
-2. Add sentiment ingestion baseline with persisted aggregates.
-3. Add model-based QA answer generation with grounding constraints.
+2. Add model-based QA answer generation with grounding constraints.
+3. Expand sentiment scoring beyond keyword lexicon baseline.

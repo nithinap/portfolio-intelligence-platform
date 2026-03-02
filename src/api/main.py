@@ -23,6 +23,7 @@ from src.data_ingestion.pipelines.jobs import run_market_snapshot_job
 from src.data_ingestion.schemas import IngestDocumentInput
 from src.rag.evaluation import QaEvalCase, evaluate_qa_cases
 from src.rag.qa import answer_question
+from src.signals import compute_daily_sentiment_signals
 
 settings = get_settings()
 configure_logging(settings.log_level)
@@ -122,6 +123,18 @@ class MarketSnapshotResponse(BaseModel):
     close: float
     volume: float
     source: str
+
+
+class SentimentComputeRequest(BaseModel):
+    ticker: str | None = None
+    source: str | None = None
+    date_from: datetime | None = None
+    date_to: datetime | None = None
+
+
+class SentimentComputeResponse(BaseModel):
+    rows_written: int
+    tickers_processed: int
 
 
 @app.middleware("http")
@@ -288,4 +301,20 @@ async def qa_evaluate_route(
             )
             for item in summary.cases
         ],
+    )
+
+
+@app.post("/signals/sentiment/compute", response_model=SentimentComputeResponse)
+async def compute_sentiment_route(
+    payload: SentimentComputeRequest, session: Annotated[Session, Depends(get_db_session)]
+) -> SentimentComputeResponse:
+    result = compute_daily_sentiment_signals(
+        session,
+        ticker=payload.ticker,
+        source=payload.source,
+        date_from=payload.date_from,
+        date_to=payload.date_to,
+    )
+    return SentimentComputeResponse(
+        rows_written=result.rows_written, tickers_processed=result.tickers_processed
     )
