@@ -7,10 +7,8 @@ from sqlalchemy.orm import Session
 from src.common.settings import get_settings
 from src.core.models import Document, DocumentChunk, EmbeddingMetadata
 from src.data_ingestion.schemas import IngestDocumentInput
-from src.rag.chunking import chunk_text
+from src.rag.chunking import get_chunker
 from src.rag.embeddings import get_embedding_provider
-
-settings = get_settings()
 
 
 @dataclass
@@ -20,9 +18,17 @@ class IngestionSummary:
 
 
 def ingest_documents(session: Session, docs: list[IngestDocumentInput]) -> IngestionSummary:
+    settings = get_settings()
     docs_count = 0
     chunks_count = 0
     embedding_provider = get_embedding_provider(settings.embedding_provider)
+    chunker = get_chunker(
+        settings.chunker_provider,
+        max_chars=settings.chunk_max_chars,
+        overlap_chars=settings.chunk_overlap_chars,
+        max_tokens=settings.chunk_max_tokens,
+        overlap_tokens=settings.chunk_overlap_tokens,
+    )
 
     for payload in docs:
         doc = Document(
@@ -36,7 +42,7 @@ def ingest_documents(session: Session, docs: list[IngestDocumentInput]) -> Inges
         session.flush()
         docs_count += 1
 
-        chunks = chunk_text(document_id=doc.id, text=payload.content)
+        chunks = chunker.chunk(document_id=doc.id, text=payload.content)
         for chunk in chunks:
             session.add(
                 DocumentChunk(

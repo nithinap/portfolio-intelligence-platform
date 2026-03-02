@@ -85,3 +85,37 @@ def test_market_snapshot_endpoints():
         rows = list_resp.json()
         assert len(rows) >= 1
         assert rows[0]["ticker"] == "AAPL"
+
+
+def test_qa_evaluate_endpoint():
+    with TestClient(app) as client:
+        ingest_payload = {
+            "documents": [
+                {
+                    "source": "unit-test-eval",
+                    "ticker": "AAPL",
+                    "title": "AAPL margins",
+                    "content": "Apple margins improved while guidance for revenue remained strong.",
+                }
+            ]
+        }
+        ingest = client.post("/documents/ingest", json=ingest_payload)
+        assert ingest.status_code == 200
+
+        eval_payload = {
+            "cases": [
+                {
+                    "question": "What do documents say about Apple margins?",
+                    "ticker": "AAPL",
+                    "source": "unit-test-eval",
+                    "min_citations": 1,
+                    "min_confidence": 0.1,
+                }
+            ]
+        }
+        resp = client.post("/qa/evaluate", json=eval_payload)
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["total_cases"] == 1
+        assert body["citation_coverage"] >= 1.0
+        assert body["cases"][0]["passed"] is True

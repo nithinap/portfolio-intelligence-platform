@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from src.common.db import SessionLocal
 from src.common.settings import get_settings
-from src.core.models import EmbeddingMetadata
+from src.core.models import DocumentChunk, EmbeddingMetadata
 from src.data_ingestion.pipelines.document_ingestion import ingest_documents
 from src.data_ingestion.schemas import IngestDocumentInput
 from src.rag.retrieval import retrieve_chunks
@@ -48,6 +48,7 @@ def test_ingestion_stores_sparse_embedding_and_retrieval_uses_it(monkeypatch):
         )
         assert len(chunks) >= 1
         assert chunks[0].score > 0
+    get_settings.cache_clear()
 
 
 def test_retrieval_lexical_mode_fallback(monkeypatch):
@@ -76,3 +77,36 @@ def test_retrieval_lexical_mode_fallback(monkeypatch):
             source=test_source,
         )
         assert len(chunks) >= 1
+    get_settings.cache_clear()
+
+
+def test_ingestion_uses_token_chunker_when_configured(monkeypatch):
+    monkeypatch.setenv("CHUNKER_PROVIDER", "token")
+    monkeypatch.setenv("CHUNK_MAX_TOKENS", "8")
+    monkeypatch.setenv("CHUNK_OVERLAP_TOKENS", "2")
+    get_settings.cache_clear()
+
+    test_source = f"chunker-test-{uuid.uuid4().hex[:8]}"
+    with SessionLocal() as session:
+        ingest_documents(
+            session,
+            [
+                IngestDocumentInput(
+                    source=test_source,
+                    ticker="MSFT",
+                    title="Token chunking test",
+                    content=(
+                        "one two three four five six seven eight nine ten eleven twelve "
+                        "thirteen fourteen fifteen sixteen"
+                    ),
+                )
+            ],
+        )
+        chunk = session.scalars(
+            select(DocumentChunk)
+            .where(DocumentChunk.source == test_source)
+            .order_by(DocumentChunk.id.desc())
+        ).first()
+        assert chunk is not None
+        assert chunk.metadata_json.get("chunker") == "token"
+    get_settings.cache_clear()

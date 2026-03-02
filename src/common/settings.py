@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     vector_db_url: str | None = Field(default=None, alias="VECTOR_DB_URL")
     embedding_provider: str = Field(default="sparse-local", alias="EMBEDDING_PROVIDER")
     retrieval_provider: str = Field(default="sparse-local", alias="RETRIEVAL_PROVIDER")
+    chunker_provider: str = Field(default="simple", alias="CHUNKER_PROVIDER")
+    chunk_max_chars: int = Field(default=800, alias="CHUNK_MAX_CHARS")
+    chunk_overlap_chars: int = Field(default=120, alias="CHUNK_OVERLAP_CHARS")
+    chunk_max_tokens: int = Field(default=180, alias="CHUNK_MAX_TOKENS")
+    chunk_overlap_tokens: int = Field(default=30, alias="CHUNK_OVERLAP_TOKENS")
     market_data_provider: str = Field(default="stub", alias="MARKET_DATA_PROVIDER")
     market_data_tickers: str = Field(default="AAPL,MSFT,NVDA", alias="MARKET_DATA_TICKERS")
     market_data_lookback_days: int = Field(default=5, alias="MARKET_DATA_LOOKBACK_DAYS")
@@ -51,6 +56,11 @@ def get_settings() -> Settings:
         "VECTOR_DB_URL": yaml_cfg.get("vector_db_url"),
         "EMBEDDING_PROVIDER": yaml_cfg.get("embedding_provider"),
         "RETRIEVAL_PROVIDER": yaml_cfg.get("retrieval_provider"),
+        "CHUNKER_PROVIDER": yaml_cfg.get("chunker_provider"),
+        "CHUNK_MAX_CHARS": yaml_cfg.get("chunk_max_chars"),
+        "CHUNK_OVERLAP_CHARS": yaml_cfg.get("chunk_overlap_chars"),
+        "CHUNK_MAX_TOKENS": yaml_cfg.get("chunk_max_tokens"),
+        "CHUNK_OVERLAP_TOKENS": yaml_cfg.get("chunk_overlap_tokens"),
         "MARKET_DATA_PROVIDER": yaml_cfg.get("market_data_provider"),
         "MARKET_DATA_TICKERS": yaml_cfg.get("market_data_tickers"),
         "MARKET_DATA_LOOKBACK_DAYS": yaml_cfg.get("market_data_lookback_days"),

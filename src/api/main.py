@@ -21,6 +21,7 @@ from src.core.models import MarketPriceSnapshot
 from src.data_ingestion.pipelines.document_ingestion import ingest_documents
 from src.data_ingestion.pipelines.jobs import run_market_snapshot_job
 from src.data_ingestion.schemas import IngestDocumentInput
+from src.rag.evaluation import QaEvalCase, evaluate_qa_cases
 from src.rag.qa import answer_question
 
 settings = get_settings()
@@ -73,6 +74,37 @@ class QaResponse(BaseModel):
     answer: str
     confidence: float
     citations: list[QaCitation]
+
+
+class QaEvalCaseRequest(BaseModel):
+    question: str = Field(min_length=3)
+    top_k: int = Field(default=5, ge=1, le=20)
+    ticker: str | None = None
+    source: str | None = None
+    date_from: datetime | None = None
+    date_to: datetime | None = None
+    min_citations: int = Field(default=1, ge=0, le=20)
+    min_confidence: float = Field(default=0.2, ge=0.0, le=1.0)
+
+
+class QaEvalRequest(BaseModel):
+    cases: list[QaEvalCaseRequest] = Field(min_length=1)
+
+
+class QaEvalCaseResponse(BaseModel):
+    question: str
+    confidence: float
+    citation_count: int
+    passed: bool
+    reasons: list[str]
+
+
+class QaEvalResponse(BaseModel):
+    total_cases: int
+    pass_rate: float
+    citation_coverage: float
+    avg_confidence: float
+    cases: list[QaEvalCaseResponse]
 
 
 class MarketIngestResponse(BaseModel):
@@ -219,3 +251,41 @@ async def list_market_snapshots(
         )
         for row in rows
     ]
+
+
+@app.post("/qa/evaluate", response_model=QaEvalResponse)
+async def qa_evaluate_route(
+    payload: QaEvalRequest, session: Annotated[Session, Depends(get_db_session)]
+) -> QaEvalResponse:
+    summary = evaluate_qa_cases(
+        session,
+        [
+            QaEvalCase(
+                question=case.question,
+                top_k=case.top_k,
+                ticker=case.ticker,
+                source=case.source,
+                date_from=case.date_from,
+                date_to=case.date_to,
+                min_citations=case.min_citations,
+                min_confidence=case.min_confidence,
+            )
+            for case in payload.cases
+        ],
+    )
+    return QaEvalResponse(
+        total_cases=summary.total_cases,
+        pass_rate=summary.pass_rate,
+        citation_coverage=summary.citation_coverage,
+        avg_confidence=summary.avg_confidence,
+        cases=[
+            QaEvalCaseResponse(
+                question=item.question,
+                confidence=item.confidence,
+                citation_count=item.citation_count,
+                passed=item.passed,
+                reasons=item.reasons,
+            )
+            for item in summary.cases
+        ],
+    )

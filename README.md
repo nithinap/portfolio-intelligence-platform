@@ -14,6 +14,7 @@ Current capabilities:
 - Document ingestion with chunking: `POST /documents/ingest`
 - Grounded Q&A with citations and confidence: `POST /qa`
 - Sparse embedding retrieval with lexical fallback and ticker/source/date filtering
+- Chunker provider support (`simple` and `token`) with config-driven selection
 - Database migrations, seed data, scheduler framework, and job audit logging
 - CI checks for lint and tests
 
@@ -45,6 +46,7 @@ Validation:
 - `GET /metrics`
 - `POST /documents/ingest`
 - `POST /qa`
+- `POST /qa/evaluate`
 - `POST /market/snapshots/fetch`
 - `GET /market/snapshots`
 
@@ -74,6 +76,23 @@ curl -X POST http://localhost:8000/qa \
     "question": "What do filings and news say about AAPL momentum?",
     "ticker": "AAPL",
     "top_k": 5
+  }'
+```
+
+Example QA evaluation request:
+
+```bash
+curl -X POST http://localhost:8000/qa/evaluate \
+  -H "content-type: application/json" \
+  -d '{
+    "cases": [
+      {
+        "question": "What do documents say about AAPL margins?",
+        "ticker": "AAPL",
+        "min_citations": 1,
+        "min_confidence": 0.1
+      }
+    ]
   }'
 ```
 
@@ -157,6 +176,6 @@ curl "http://localhost:8000/market/snapshots?ticker=AAPL&limit=10"
 - OpenTelemetry + Prometheus/Grafana for observability
 
 ## Immediate Priorities
-1. Introduce chunker interface and add token-aware chunking strategy.
-2. Add QA evaluation checks (citation coverage and consistency metrics).
-3. Add sentiment ingestion baseline with persisted aggregates.
+1. Benchmark chunking strategies and set environment-specific defaults.
+2. Add sentiment ingestion baseline with persisted aggregates.
+3. Add model-based QA answer generation with grounding constraints.

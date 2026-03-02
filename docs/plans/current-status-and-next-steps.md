@@ -1,6 +1,6 @@
 # Current Status And Next Steps
 
-Last updated: 2026-03-01 22:07:24 MST
+Last updated: 2026-03-01 22:33:18 MST
 
 ## Progress Summary
 
@@ -33,8 +33,13 @@ Last updated: 2026-03-01 22:07:24 MST
 - Added retrieval service:
   - Sparse embedding scoring with lexical fallback.
   - Filters by ticker/source/date range preserved.
+- Added chunker provider interface:
+  - `SimpleChunker` (character windows) and `TokenChunker` (token windows).
+  - Configurable via environment/profile settings.
 - Added grounded QA service and API route:
   - `POST /qa` returns answer, confidence, and citations.
+- Added QA evaluation checks:
+  - `POST /qa/evaluate` returns pass rate, citation coverage, and per-case failures.
 - Added ingestion API route:
   - `POST /documents/ingest`.
 - Added integration tests covering ingestion and QA behavior.
@@ -64,19 +69,19 @@ Last updated: 2026-03-01 22:07:24 MST
 ## Next Steps / Task Backlog
 
 1. Improve chunking architecture.
-- Introduce a chunker interface (`SimpleChunker`, `TokenChunker`).
-- Keep current chunker as default until token-based variant is benchmarked.
+- Benchmark current chunking defaults on retrieval quality and latency.
+- Decide default provider by environment (`simple` for local, `token` for production).
 
-2. Add Phase 1 QA quality checks.
-- Build small curated QA fixture set.
-- Track citation coverage and consistency metrics.
-
-3. Add sentiment pipeline baseline.
+2. Add sentiment pipeline baseline.
 - Ingest sentiment signals by ticker/source/date.
 - Persist aggregates for downstream Phase 2 signal modules.
 
+3. Add model-backed QA generation.
+- Keep citation and filter constraints as hard requirements.
+- Compare answer quality vs deterministic baseline.
+
 ## Suggested Immediate Execution Order
 
-1. Chunker interface + token chunking experiment.
-2. QA evaluation checks and reporting.
-3. Sentiment pipeline baseline with persisted aggregates.
+1. Chunking benchmark and default-provider decision.
+2. Sentiment pipeline baseline with persisted aggregates.
+3. Model-backed QA generation with grounding constraints.
