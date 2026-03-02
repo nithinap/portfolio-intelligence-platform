@@ -8,7 +8,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import text
+from sqlalchemy import desc, select, text
 from sqlalchemy.orm import Session
 
 from src.common.bootstrap import bootstrap_database
@@ -17,7 +17,9 @@ from src.common.errors import ErrorResponse
 from src.common.logging import configure_logging, get_correlation_id, get_logger, set_correlation_id
 from src.common.observability import MetricsMiddleware, metrics_response, setup_tracing
 from src.common.settings import get_settings
+from src.core.models import MarketPriceSnapshot
 from src.data_ingestion.pipelines.document_ingestion import ingest_documents
+from src.data_ingestion.pipelines.jobs import run_market_snapshot_job
 from src.data_ingestion.schemas import IngestDocumentInput
 from src.rag.qa import answer_question
 
@@ -71,6 +73,23 @@ class QaResponse(BaseModel):
     answer: str
     confidence: float
     citations: list[QaCitation]
+
+
+class MarketIngestResponse(BaseModel):
+    records_processed: int
+    details: dict
+
+
+class MarketSnapshotResponse(BaseModel):
+    ticker: str
+    interval: str
+    ts_utc: datetime
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+    source: str
 
 
 @app.middleware("http")
@@ -166,3 +185,37 @@ async def qa_route(
             for c in result.citations
         ],
     )
+
+
+@app.post("/market/snapshots/fetch", response_model=MarketIngestResponse)
+async def fetch_market_snapshots() -> MarketIngestResponse:
+    result = run_market_snapshot_job()
+    return MarketIngestResponse(records_processed=result.records_processed, details=result.details)
+
+
+@app.get("/market/snapshots", response_model=list[MarketSnapshotResponse])
+async def list_market_snapshots(
+    session: Annotated[Session, Depends(get_db_session)],
+    ticker: str | None = None,
+    limit: int = 50,
+) -> list[MarketSnapshotResponse]:
+    safe_limit = min(max(limit, 1), 500)
+    stmt = select(MarketPriceSnapshot)
+    if ticker:
+        stmt = stmt.where(MarketPriceSnapshot.ticker == ticker.upper())
+    stmt = stmt.order_by(desc(MarketPriceSnapshot.ts_utc)).limit(safe_limit)
+    rows = session.scalars(stmt).all()
+    return [
+        MarketSnapshotResponse(
+            ticker=row.ticker,
+            interval=row.interval,
+            ts_utc=row.ts_utc,
+            open=row.open,
+            high=row.high,
+            low=row.low,
+            close=row.close,
+            volume=row.volume,
+            source=row.source,
+        )
+        for row in rows
+    ]

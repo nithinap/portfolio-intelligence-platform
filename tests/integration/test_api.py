@@ -71,3 +71,17 @@ def test_qa_endpoint_returns_citations():
         body = qa.json()
         assert body["confidence"] > 0
         assert len(body["citations"]) >= 1
+
+
+def test_market_snapshot_endpoints():
+    with TestClient(app) as client:
+        fetch = client.post("/market/snapshots/fetch")
+        assert fetch.status_code == 200
+        fetch_body = fetch.json()
+        assert fetch_body["records_processed"] >= 1
+
+        list_resp = client.get("/market/snapshots?ticker=AAPL&limit=5")
+        assert list_resp.status_code == 200
+        rows = list_resp.json()
+        assert len(rows) >= 1
+        assert rows[0]["ticker"] == "AAPL"

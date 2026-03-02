@@ -103,8 +103,52 @@ class YahooFinanceProvider:
         return bars[: max(1, lookback_days)]
 
 
+class YFinanceProvider:
+    def fetch_daily_bars(self, tickers: list[str], lookback_days: int = 5) -> list[PriceBar]:
+        try:
+            import yfinance as yf
+        except ImportError as exc:
+            raise RuntimeError(
+                "yfinance is not installed. Run `make setup` to install dependencies."
+            ) from exc
+
+        bars: list[PriceBar] = []
+        period_days = max(5, lookback_days + 2)
+        for ticker in tickers:
+            history = yf.Ticker(ticker).history(
+                period=f"{period_days}d",
+                interval="1d",
+                auto_adjust=False,
+                actions=False,
+            )
+            if history.empty:
+                continue
+            history = history.reset_index().tail(max(1, lookback_days))
+            for _, row in history.iterrows():
+                ts = row["Date"].to_pydatetime()
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=UTC)
+                else:
+                    ts = ts.astimezone(UTC)
+                bars.append(
+                    PriceBar(
+                        ticker=ticker,
+                        ts_utc=ts,
+                        open=float(row["Open"]),
+                        high=float(row["High"]),
+                        low=float(row["Low"]),
+                        close=float(row["Close"]),
+                        volume=float(row["Volume"]),
+                        source="yfinance",
+                    )
+                )
+        return bars
+
+
 def get_market_data_provider(provider_name: str) -> MarketDataProvider:
     normalized = provider_name.strip().lower()
-    if normalized == "yahoo":
+    if normalized in {"yfinance", "yahoo"}:
+        return YFinanceProvider()
+    if normalized == "yahoo-chart":
         return YahooFinanceProvider()
     return StubMarketDataProvider()

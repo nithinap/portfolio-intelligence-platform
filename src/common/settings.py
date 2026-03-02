@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -37,7 +38,8 @@ def _load_yaml_profile(app_env: str) -> dict[str, Any]:
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    env = Settings().app_env
+    base = Settings()
+    env = base.app_env
     yaml_cfg = _load_yaml_profile(env)
     mapped = {
         "APP_ENV": yaml_cfg.get("app_env"),
@@ -49,5 +51,5 @@ def get_settings() -> Settings:
         "MARKET_DATA_TICKERS": yaml_cfg.get("market_data_tickers"),
         "MARKET_DATA_LOOKBACK_DAYS": yaml_cfg.get("market_data_lookback_days"),
     }
-    merged = {k: v for k, v in mapped.items() if v is not None}
+    merged = {k: v for k, v in mapped.items() if v is not None and os.getenv(k) is None}
     return Settings(**merged)

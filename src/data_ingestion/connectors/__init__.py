@@ -3,6 +3,7 @@ from src.data_ingestion.connectors.market_data import (
     PriceBar,
     StubMarketDataProvider,
     YahooFinanceProvider,
+    YFinanceProvider,
     get_market_data_provider,
 )
 
@@ -10,6 +11,7 @@ __all__ = [
     "MarketDataProvider",
     "PriceBar",
     "StubMarketDataProvider",
+    "YFinanceProvider",
     "YahooFinanceProvider",
     "get_market_data_provider",
 ]

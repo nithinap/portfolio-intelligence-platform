@@ -45,6 +45,8 @@ Validation:
 - `GET /metrics`
 - `POST /documents/ingest`
 - `POST /qa`
+- `POST /market/snapshots/fetch`
+- `GET /market/snapshots`
 
 Example ingestion request:
 
@@ -73,6 +75,29 @@ curl -X POST http://localhost:8000/qa \
     "ticker": "AAPL",
     "top_k": 5
   }'
+```
+
+## Real Market Data (Yahoo Finance via yfinance)
+Yahoo Finance does not require creating an account or API key for basic historical price pulls.
+
+1. Keep dependencies updated:
+`make setup`
+
+2. In `.env`, set:
+```bash
+MARKET_DATA_PROVIDER=yfinance
+MARKET_DATA_TICKERS=AAPL,MSFT,NVDA,SPY
+MARKET_DATA_LOOKBACK_DAYS=10
+```
+
+3. Trigger a market fetch:
+```bash
+curl -X POST http://localhost:8000/market/snapshots/fetch
+```
+
+4. Inspect stored snapshots:
+```bash
+curl "http://localhost:8000/market/snapshots?ticker=AAPL&limit=10"
 ```
 
 ## Architecture Principles
