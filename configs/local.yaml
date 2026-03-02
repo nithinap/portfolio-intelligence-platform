@@ -3,6 +3,8 @@ log_level: INFO
 database_url: sqlite:///./data/processed/finance_lm.db
 vector_db_provider: pgvector
 vector_db_url: ""
+embedding_provider: sparse-local
+retrieval_provider: sparse-local
 market_data_provider: stub
 market_data_tickers: AAPL,MSFT,NVDA
 market_data_lookback_days: 5

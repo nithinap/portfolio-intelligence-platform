@@ -4,9 +4,13 @@ from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
 
+from src.common.settings import get_settings
 from src.core.models import Document, DocumentChunk, EmbeddingMetadata
 from src.data_ingestion.schemas import IngestDocumentInput
 from src.rag.chunking import chunk_text
+from src.rag.embeddings import get_embedding_provider
+
+settings = get_settings()
 
 
 @dataclass
@@ -18,6 +22,7 @@ class IngestionSummary:
 def ingest_documents(session: Session, docs: list[IngestDocumentInput]) -> IngestionSummary:
     docs_count = 0
     chunks_count = 0
+    embedding_provider = get_embedding_provider(settings.embedding_provider)
 
     for payload in docs:
         doc = Document(
@@ -49,9 +54,12 @@ def ingest_documents(session: Session, docs: list[IngestDocumentInput]) -> Inges
                 EmbeddingMetadata(
                     document_id=doc.id,
                     chunk_id=chunk.chunk_id,
-                    vector_provider="stub-lexical",
-                    model_name="keyword-overlap-v1",
-                    payload={"char_count": len(chunk.content)},
+                    vector_provider=settings.embedding_provider,
+                    model_name="sparse-termfreq-v1",
+                    payload={
+                        "char_count": len(chunk.content),
+                        "embedding": embedding_provider.embed(chunk.content),
+                    },
                 )
             )
             chunks_count += 1

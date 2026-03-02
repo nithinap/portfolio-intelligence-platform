@@ -1,6 +1,6 @@
 # Current Status And Next Steps
 
-Last updated: 2026-02-15 15:59:05 MST
+Last updated: 2026-03-01 22:07:24 MST
 
 ## Progress Summary
 
@@ -25,13 +25,14 @@ Last updated: 2026-02-15 15:59:05 MST
   - `Makefile` commands for setup/lint/test/migrate/run.
   - GitHub Actions CI running lint + tests.
 
-### Phase 1 (In Progress) - Initial Vertical Slice Delivered
+### Phase 1 (In Progress) - Vertical Slice Delivered
 - Added document chunk storage model and migration:
   - `document_chunks` table with chunk metadata.
 - Added document ingestion pipeline:
-  - Accepts documents and writes documents + chunks + embedding metadata stubs.
+  - Accepts documents and writes documents + chunks + sparse embedding metadata.
 - Added retrieval service:
-  - Lexical ranking with filters by ticker/source/date range.
+  - Sparse embedding scoring with lexical fallback.
+  - Filters by ticker/source/date range preserved.
 - Added grounded QA service and API route:
   - `POST /qa` returns answer, confidence, and citations.
 - Added ingestion API route:
@@ -62,25 +63,20 @@ Last updated: 2026-02-15 15:59:05 MST
 
 ## Next Steps / Task Backlog
 
-1. Upgrade retrieval from lexical stub to vector-capable design.
-- Add embedding provider interface.
-- Store embeddings/vector references and keep current retrieval filters.
-- Preserve deterministic fallback mode for local tests.
-
-2. Improve chunking architecture.
+1. Improve chunking architecture.
 - Introduce a chunker interface (`SimpleChunker`, `TokenChunker`).
 - Keep current chunker as default until token-based variant is benchmarked.
 
-3. Add Phase 1 QA quality checks.
+2. Add Phase 1 QA quality checks.
 - Build small curated QA fixture set.
 - Track citation coverage and consistency metrics.
 
-4. Add sentiment pipeline baseline.
+3. Add sentiment pipeline baseline.
 - Ingest sentiment signals by ticker/source/date.
 - Persist aggregates for downstream Phase 2 signal modules.
 
 ## Suggested Immediate Execution Order
 
-1. Retrieval/embedding interface upgrade.
-2. Chunker interface + token chunking experiment.
-3. QA evaluation checks and reporting.
+1. Chunker interface + token chunking experiment.
+2. QA evaluation checks and reporting.
+3. Sentiment pipeline baseline with persisted aggregates.

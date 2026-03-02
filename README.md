@@ -13,13 +13,13 @@ Current capabilities:
 - FastAPI baseline endpoints: `/health/live`, `/health/ready`, `/version`, `/metrics`
 - Document ingestion with chunking: `POST /documents/ingest`
 - Grounded Q&A with citations and confidence: `POST /qa`
-- Lexical retrieval with ticker/source/date filtering
+- Sparse embedding retrieval with lexical fallback and ticker/source/date filtering
 - Database migrations, seed data, scheduler framework, and job audit logging
 - CI checks for lint and tests
 
 Known limitations (current state):
 - Market/news/filings connectors are still stubs
-- Retrieval is lexical fallback (no real embedding/vector index yet)
+- Retrieval uses local sparse embeddings (no external vector DB/index yet)
 - QA answer synthesis is deterministic (no LLM integration yet)
 - Sentiment pipeline and Phase 1 evaluation metrics are not implemented yet
 
@@ -157,7 +157,6 @@ curl "http://localhost:8000/market/snapshots?ticker=AAPL&limit=10"
 - OpenTelemetry + Prometheus/Grafana for observability
 
 ## Immediate Priorities
-1. Add market data provider abstraction and initial Yahoo Finance connector.
-2. Persist normalized OHLCV snapshots with migration + ingestion job wiring.
-3. Replace stub market snapshot job with real connector-backed ingestion.
-4. Add embedding/vector retrieval path while preserving current filter contract.
+1. Introduce chunker interface and add token-aware chunking strategy.
+2. Add QA evaluation checks (citation coverage and consistency metrics).
+3. Add sentiment ingestion baseline with persisted aggregates.
