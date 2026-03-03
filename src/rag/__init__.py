@@ -6,6 +6,12 @@ from src.rag.answer_generation import (
     get_answer_generator,
 )
 from src.rag.chunking import Chunk, Chunker, SimpleChunker, TokenChunker, get_chunker
+from src.rag.chunking_benchmark import (
+    ChunkingBenchmarkCase,
+    ChunkingBenchmarkMetrics,
+    ChunkingBenchmarkSummary,
+    benchmark_chunkers,
+)
 from src.rag.embeddings import (
     EmbeddingProvider,
     SparseEmbeddingProvider,
@@ -31,6 +37,10 @@ __all__ = [
     "OpenAIAnswerGenerator",
     "SourceContext",
     "get_answer_generator",
+    "ChunkingBenchmarkCase",
+    "ChunkingBenchmarkMetrics",
+    "ChunkingBenchmarkSummary",
+    "benchmark_chunkers",
     "QaEvalCase",
     "QaEvalCaseResult",
     "QaEvalSummary",

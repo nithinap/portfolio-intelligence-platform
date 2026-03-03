@@ -1,6 +1,6 @@
 # Current Status And Next Steps
 
-Last updated: 2026-03-02 15:41:08 MST
+Last updated: 2026-03-02 21:21:01 MST
 
 ## Progress Summary
 
@@ -36,6 +36,8 @@ Last updated: 2026-03-02 15:41:08 MST
 - Added chunker provider interface:
   - `SimpleChunker` (character windows) and `TokenChunker` (token windows).
   - Configurable via environment/profile settings.
+- Added chunking benchmark endpoint:
+  - `POST /qa/chunking/benchmark` compares simple vs token chunkers on overlap/pass-rate and latency metrics.
 - Added grounded QA service and API route:
   - `POST /qa` returns answer, confidence, and citations.
 - Added model-backed QA generation option:
@@ -74,20 +76,20 @@ Last updated: 2026-03-02 15:41:08 MST
 
 ## Next Steps / Task Backlog
 
-1. Improve chunking architecture.
-- Benchmark current chunking defaults on retrieval quality and latency.
-- Decide default provider by environment (`simple` for local, `token` for production).
-
-2. Improve sentiment scoring quality.
+1. Improve sentiment scoring quality.
 - Replace lexicon-only baseline with model-based scoring.
 - Add calibration and backtests for sentiment utility.
 
-3. Add recommendation quality evaluation over time.
+2. Add recommendation quality evaluation over time.
 - Measure recommendation outcome against realized returns.
 - Track drift between expected and realized signal utility.
 
+3. Expand chunking benchmark coverage.
+- Add portfolio-specific eval corpora and thresholds.
+- Use benchmark outputs to set and enforce environment defaults.
+
 ## Suggested Immediate Execution Order
 
-1. Chunking benchmark and default-provider decision.
-2. Sentiment scoring upgrade and validation.
-3. Recommendation quality evaluation instrumentation.
+1. Sentiment scoring upgrade and validation.
+2. Recommendation quality evaluation instrumentation.
+3. Chunking benchmark expansion and default policy automation.

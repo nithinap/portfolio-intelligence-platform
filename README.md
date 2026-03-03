@@ -48,6 +48,7 @@ Validation:
 - `POST /documents/ingest`
 - `POST /qa`
 - `POST /qa/evaluate`
+- `POST /qa/chunking/benchmark`
 - `POST /market/snapshots/fetch`
 - `GET /market/snapshots`
 - `POST /signals/sentiment/compute`
@@ -103,6 +104,22 @@ curl -X POST http://localhost:8000/qa/evaluate \
         "ticker": "AAPL",
         "min_citations": 1,
         "min_confidence": 0.1
+      }
+    ]
+  }'
+```
+
+Example chunking benchmark request:
+
+```bash
+curl -X POST http://localhost:8000/qa/chunking/benchmark \
+  -H "content-type: application/json" \
+  -d '{
+    "threshold": 0.35,
+    "cases": [
+      {
+        "question": "What is the trend in Apple margins?",
+        "content": "Apple margins improved with stronger revenue guidance."
       }
     ]
   }'

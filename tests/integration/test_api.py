@@ -152,3 +152,31 @@ def test_sentiment_compute_endpoint():
         )
         assert total is not None
         assert total >= 1
+
+
+def test_chunking_benchmark_endpoint():
+    payload = {
+        "threshold": 0.3,
+        "cases": [
+            {
+                "question": "What is the trend in Apple margins?",
+                "content": (
+                    "Apple margins improved in the quarter while revenue also grew and "
+                    "guidance remained strong."
+                ),
+            },
+            {
+                "question": "How is Microsoft cloud demand changing?",
+                "content": (
+                    "Microsoft reported cloud demand acceleration from enterprise customers "
+                    "with stronger usage trends."
+                ),
+            },
+        ],
+    }
+    with TestClient(app) as client:
+        resp = client.post("/qa/chunking/benchmark", json=payload)
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["winner"] in {"simple", "token"}
+        assert len(body["metrics"]) == 2

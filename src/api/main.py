@@ -21,6 +21,7 @@ from src.core.models import MarketPriceSnapshot
 from src.data_ingestion.pipelines.document_ingestion import ingest_documents
 from src.data_ingestion.pipelines.jobs import run_market_snapshot_job
 from src.data_ingestion.schemas import IngestDocumentInput
+from src.rag.chunking_benchmark import ChunkingBenchmarkCase, benchmark_chunkers
 from src.rag.evaluation import QaEvalCase, evaluate_qa_cases
 from src.rag.qa import answer_question
 from src.signals import compute_daily_sentiment_signals
@@ -136,6 +137,31 @@ class SentimentComputeRequest(BaseModel):
 class SentimentComputeResponse(BaseModel):
     rows_written: int
     tickers_processed: int
+
+
+class ChunkingBenchmarkCaseRequest(BaseModel):
+    question: str = Field(min_length=3)
+    content: str = Field(min_length=10)
+
+
+class ChunkingBenchmarkRequest(BaseModel):
+    cases: list[ChunkingBenchmarkCaseRequest] = Field(min_length=1)
+    threshold: float = Field(default=0.35, ge=0.0, le=1.0)
+
+
+class ChunkingBenchmarkMetricsResponse(BaseModel):
+    provider: str
+    avg_best_overlap: float
+    pass_rate: float
+    avg_chunks_per_case: float
+    avg_chunk_chars: float
+    runtime_ms: float
+
+
+class ChunkingBenchmarkResponse(BaseModel):
+    threshold: float
+    winner: str
+    metrics: list[ChunkingBenchmarkMetricsResponse]
 
 
 @app.middleware("http")
@@ -319,4 +345,30 @@ async def compute_sentiment_route(
     )
     return SentimentComputeResponse(
         rows_written=result.rows_written, tickers_processed=result.tickers_processed
+    )
+
+
+@app.post("/qa/chunking/benchmark", response_model=ChunkingBenchmarkResponse)
+async def chunking_benchmark_route(payload: ChunkingBenchmarkRequest) -> ChunkingBenchmarkResponse:
+    summary = benchmark_chunkers(
+        [
+            ChunkingBenchmarkCase(question=case.question, content=case.content)
+            for case in payload.cases
+        ],
+        threshold=payload.threshold,
+    )
+    return ChunkingBenchmarkResponse(
+        threshold=summary.threshold,
+        winner=summary.winner,
+        metrics=[
+            ChunkingBenchmarkMetricsResponse(
+                provider=item.provider,
+                avg_best_overlap=item.avg_best_overlap,
+                pass_rate=item.pass_rate,
+                avg_chunks_per_case=item.avg_chunks_per_case,
+                avg_chunk_chars=item.avg_chunk_chars,
+                runtime_ms=item.runtime_ms,
+            )
+            for item in summary.metrics
+        ],
     )
