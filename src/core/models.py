@@ -117,6 +117,23 @@ class Recommendation(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 
+class RecommendationOutcome(Base):
+    __tablename__ = "recommendation_outcomes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    recommendation_id: Mapped[int | None] = mapped_column(ForeignKey("recommendations.id"))
+    ticker: Mapped[str] = mapped_column(String(16), nullable=False)
+    horizon: Mapped[str] = mapped_column(String(16), nullable=False)
+    action: Mapped[str] = mapped_column(String(8), nullable=False)
+    expected_confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    realized_return: Mapped[float] = mapped_column(Float, nullable=False)
+    window_days: Mapped[int] = mapped_column(Integer, nullable=False)
+    outcome_label: Mapped[str] = mapped_column(String(12), nullable=False)
+    details: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    realized_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
 class AuditEvent(Base):
     __tablename__ = "audit_events"
 

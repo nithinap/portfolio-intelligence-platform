@@ -52,6 +52,8 @@ Validation:
 - `POST /market/snapshots/fetch`
 - `GET /market/snapshots`
 - `POST /signals/sentiment/compute`
+- `POST /recommendations/outcomes`
+- `GET /recommendations/outcomes/summary`
 
 Example ingestion request:
 
@@ -146,6 +148,27 @@ curl -X POST http://localhost:8000/signals/sentiment/compute \
   }'
 ```
 
+Example recommendation outcome record:
+
+```bash
+curl -X POST http://localhost:8000/recommendations/outcomes \
+  -H "content-type: application/json" \
+  -d '{
+    "ticker": "AAPL",
+    "horizon": "short",
+    "action": "BUY",
+    "expected_confidence": 0.72,
+    "realized_return": 0.018,
+    "window_days": 5
+  }'
+```
+
+Example recommendation outcome summary:
+
+```bash
+curl "http://localhost:8000/recommendations/outcomes/summary?ticker=AAPL&horizon=short"
+```
+
 ## Real Market Data (Yahoo Finance via yfinance)
 Yahoo Finance does not require creating an account or API key for basic historical price pulls.
 
@@ -226,6 +249,6 @@ curl "http://localhost:8000/market/snapshots?ticker=AAPL&limit=10"
 - OpenTelemetry + Prometheus/Grafana for observability
 
 ## Immediate Priorities
-1. Add historical evaluation for recommendation quality over time.
-2. Improve recommendation and sentiment calibration dashboards.
-3. Implement connector-backed news/filings ingestion jobs.
+1. Improve recommendation and sentiment calibration dashboards.
+2. Implement connector-backed news/filings ingestion jobs.
+3. Add richer outcome attribution by signal/source slice.

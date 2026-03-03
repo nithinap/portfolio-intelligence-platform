@@ -182,3 +182,40 @@ def test_chunking_benchmark_endpoint():
         body = resp.json()
         assert body["winner"] in {"simple", "token"}
         assert len(body["metrics"]) == 2
+
+
+def test_recommendation_outcomes_endpoints():
+    with TestClient(app) as client:
+        create_1 = client.post(
+            "/recommendations/outcomes",
+            json={
+                "ticker": "AAPL",
+                "horizon": "short",
+                "action": "BUY",
+                "expected_confidence": 0.7,
+                "realized_return": 0.03,
+                "window_days": 5,
+            },
+        )
+        assert create_1.status_code == 200
+        assert create_1.json()["outcome_label"] == "hit"
+
+        create_2 = client.post(
+            "/recommendations/outcomes",
+            json={
+                "ticker": "AAPL",
+                "horizon": "short",
+                "action": "BUY",
+                "expected_confidence": 0.8,
+                "realized_return": -0.02,
+                "window_days": 5,
+            },
+        )
+        assert create_2.status_code == 200
+        assert create_2.json()["outcome_label"] == "miss"
+
+        summary = client.get("/recommendations/outcomes/summary?ticker=AAPL&horizon=short")
+        assert summary.status_code == 200
+        body = summary.json()
+        assert body["total"] >= 2
+        assert 0.0 <= body["hit_rate"] <= 1.0

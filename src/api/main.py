@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import subprocess
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, Request
@@ -18,6 +18,7 @@ from src.common.logging import configure_logging, get_correlation_id, get_logger
 from src.common.observability import MetricsMiddleware, metrics_response, setup_tracing
 from src.common.settings import get_settings
 from src.core.models import MarketPriceSnapshot
+from src.core.recommendation_outcomes import OutcomeInput, record_outcome, summarize_outcomes
 from src.data_ingestion.pipelines.document_ingestion import ingest_documents
 from src.data_ingestion.pipelines.jobs import run_market_snapshot_job
 from src.data_ingestion.schemas import IngestDocumentInput
@@ -163,6 +164,33 @@ class ChunkingBenchmarkResponse(BaseModel):
     threshold: float
     winner: str
     metrics: list[ChunkingBenchmarkMetricsResponse]
+
+
+class RecommendationOutcomeCreateRequest(BaseModel):
+    recommendation_id: int | None = None
+    ticker: str = Field(min_length=1, max_length=16)
+    horizon: str = Field(min_length=1, max_length=16)
+    action: str = Field(min_length=1, max_length=8)
+    expected_confidence: float = Field(ge=0.0, le=1.0)
+    realized_return: float
+    window_days: int = Field(default=5, ge=1, le=3650)
+    realized_at: datetime | None = None
+    details: dict = Field(default_factory=dict)
+
+
+class RecommendationOutcomeCreateResponse(BaseModel):
+    id: int
+    outcome_label: str
+
+
+class RecommendationOutcomeSummaryResponse(BaseModel):
+    total: int
+    hit_rate: float
+    neutral_rate: float
+    avg_realized_return: float
+    avg_expected_confidence: float
+    calibration_gap: float
+    recent_hit_rate_drift: float
 
 
 @app.middleware("http")
@@ -374,4 +402,47 @@ async def chunking_benchmark_route(payload: ChunkingBenchmarkRequest) -> Chunkin
             )
             for item in summary.metrics
         ],
+    )
+
+
+@app.post("/recommendations/outcomes", response_model=RecommendationOutcomeCreateResponse)
+async def create_recommendation_outcome_route(
+    payload: RecommendationOutcomeCreateRequest,
+    session: Annotated[Session, Depends(get_db_session)],
+) -> RecommendationOutcomeCreateResponse:
+    result = record_outcome(
+        session,
+        OutcomeInput(
+            recommendation_id=payload.recommendation_id,
+            ticker=payload.ticker,
+            horizon=payload.horizon,
+            action=payload.action,
+            expected_confidence=payload.expected_confidence,
+            realized_return=payload.realized_return,
+            window_days=payload.window_days,
+            realized_at=payload.realized_at or datetime.now(UTC),
+            details=payload.details,
+        ),
+    )
+    return RecommendationOutcomeCreateResponse(id=result.id, outcome_label=result.outcome_label)
+
+
+@app.get("/recommendations/outcomes/summary", response_model=RecommendationOutcomeSummaryResponse)
+async def recommendation_outcomes_summary_route(
+    session: Annotated[Session, Depends(get_db_session)],
+    ticker: str | None = None,
+    horizon: str | None = None,
+    lookback_days: int | None = None,
+) -> RecommendationOutcomeSummaryResponse:
+    summary = summarize_outcomes(
+        session, ticker=ticker, horizon=horizon, lookback_days=lookback_days
+    )
+    return RecommendationOutcomeSummaryResponse(
+        total=summary.total,
+        hit_rate=summary.hit_rate,
+        neutral_rate=summary.neutral_rate,
+        avg_realized_return=summary.avg_realized_return,
+        avg_expected_confidence=summary.avg_expected_confidence,
+        calibration_gap=summary.calibration_gap,
+        recent_hit_rate_drift=summary.recent_hit_rate_drift,
     )
