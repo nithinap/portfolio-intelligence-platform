@@ -38,6 +38,14 @@ class Settings(BaseSettings):
     market_data_provider: str = Field(default="stub", alias="MARKET_DATA_PROVIDER")
     market_data_tickers: str = Field(default="AAPL,MSFT,NVDA", alias="MARKET_DATA_TICKERS")
     market_data_lookback_days: int = Field(default=5, alias="MARKET_DATA_LOOKBACK_DAYS")
+    sentiment_provider: str = Field(default="lexicon", alias="SENTIMENT_PROVIDER")
+    sentiment_openai_model: str = Field(default="gpt-4o-mini", alias="SENTIMENT_OPENAI_MODEL")
+    sentiment_openai_base_url: str = Field(
+        default="https://api.openai.com/v1", alias="SENTIMENT_OPENAI_BASE_URL"
+    )
+    sentiment_openai_timeout_seconds: int = Field(
+        default=20, alias="SENTIMENT_OPENAI_TIMEOUT_SECONDS"
+    )
 
 
 def _load_yaml_profile(app_env: str) -> dict[str, Any]:
@@ -73,6 +81,10 @@ def get_settings() -> Settings:
         "MARKET_DATA_PROVIDER": yaml_cfg.get("market_data_provider"),
         "MARKET_DATA_TICKERS": yaml_cfg.get("market_data_tickers"),
         "MARKET_DATA_LOOKBACK_DAYS": yaml_cfg.get("market_data_lookback_days"),
+        "SENTIMENT_PROVIDER": yaml_cfg.get("sentiment_provider"),
+        "SENTIMENT_OPENAI_MODEL": yaml_cfg.get("sentiment_openai_model"),
+        "SENTIMENT_OPENAI_BASE_URL": yaml_cfg.get("sentiment_openai_base_url"),
+        "SENTIMENT_OPENAI_TIMEOUT_SECONDS": yaml_cfg.get("sentiment_openai_timeout_seconds"),
     }
     merged = {k: v for k, v in mapped.items() if v is not None and os.getenv(k) is None}
     return Settings(**merged)

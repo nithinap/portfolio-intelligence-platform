@@ -1,6 +1,6 @@
 # Current Status And Next Steps
 
-Last updated: 2026-03-02 21:21:01 MST
+Last updated: 2026-03-02 22:16:21 MST
 
 ## Progress Summary
 
@@ -47,7 +47,7 @@ Last updated: 2026-03-02 21:21:01 MST
   - `POST /qa/evaluate` returns pass rate, citation coverage, and per-case failures.
 - Added sentiment signal baseline:
   - `POST /signals/sentiment/compute` aggregates document sentiment into `signals`.
-  - Baseline scoring uses deterministic positive/negative keyword lexicon.
+  - Supports configurable providers (`lexicon`, `openai`) with lexicon fallback.
 - Added ingestion API route:
   - `POST /documents/ingest`.
 - Added integration tests covering ingestion and QA behavior.
@@ -70,26 +70,26 @@ Last updated: 2026-03-02 21:21:01 MST
 ## What Is Not Built Yet
 - Real market/news/filings connectors (current jobs are stubs).
 - Real embedding model calls and vector index writes.
-- Model-backed sentiment scoring and calibration framework.
+- Sentiment calibration framework and utility backtests.
 - Recommendation outcome evaluation and drift tracking.
 - Phase 2+ modules (signals/agents/policy/risk/execution/backtesting/monitoring logic).
 
 ## Next Steps / Task Backlog
 
-1. Improve sentiment scoring quality.
-- Replace lexicon-only baseline with model-based scoring.
-- Add calibration and backtests for sentiment utility.
-
-2. Add recommendation quality evaluation over time.
+1. Add recommendation quality evaluation over time.
 - Measure recommendation outcome against realized returns.
 - Track drift between expected and realized signal utility.
 
-3. Expand chunking benchmark coverage.
+2. Expand chunking benchmark coverage.
 - Add portfolio-specific eval corpora and thresholds.
 - Use benchmark outputs to set and enforce environment defaults.
 
+3. Add sentiment calibration and backtests.
+- Compare provider outputs against realized move labels.
+- Track stability and drift of sentiment signal quality.
+
 ## Suggested Immediate Execution Order
 
-1. Sentiment scoring upgrade and validation.
-2. Recommendation quality evaluation instrumentation.
-3. Chunking benchmark expansion and default policy automation.
+1. Recommendation quality evaluation instrumentation.
+2. Chunking benchmark expansion and default policy automation.
+3. Sentiment calibration/backtesting pipeline.

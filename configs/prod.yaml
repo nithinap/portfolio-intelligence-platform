@@ -17,3 +17,7 @@ chunk_overlap_tokens: 30
 market_data_provider: yahoo
 market_data_tickers: AAPL,MSFT,NVDA
 market_data_lookback_days: 5
+sentiment_provider: openai
+sentiment_openai_model: gpt-4o-mini
+sentiment_openai_base_url: https://api.openai.com/v1
+sentiment_openai_timeout_seconds: 20

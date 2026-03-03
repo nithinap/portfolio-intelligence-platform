@@ -137,6 +137,7 @@ class SentimentComputeRequest(BaseModel):
 class SentimentComputeResponse(BaseModel):
     rows_written: int
     tickers_processed: int
+    provider_counts: dict[str, int]
 
 
 class ChunkingBenchmarkCaseRequest(BaseModel):
@@ -344,7 +345,9 @@ async def compute_sentiment_route(
         date_to=payload.date_to,
     )
     return SentimentComputeResponse(
-        rows_written=result.rows_written, tickers_processed=result.tickers_processed
+        rows_written=result.rows_written,
+        tickers_processed=result.tickers_processed,
+        provider_counts=result.provider_counts,
     )
 
 

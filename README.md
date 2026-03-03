@@ -92,6 +92,16 @@ QA_OPENAI_TIMEOUT_SECONDS=20
 OPENAI_API_KEY=your_key_here
 ```
 
+Optional `.env` settings for model-backed sentiment scoring:
+
+```bash
+SENTIMENT_PROVIDER=openai
+SENTIMENT_OPENAI_MODEL=gpt-4o-mini
+SENTIMENT_OPENAI_BASE_URL=https://api.openai.com/v1
+SENTIMENT_OPENAI_TIMEOUT_SECONDS=20
+OPENAI_API_KEY=your_key_here
+```
+
 Example QA evaluation request:
 
 ```bash
@@ -216,6 +226,6 @@ curl "http://localhost:8000/market/snapshots?ticker=AAPL&limit=10"
 - OpenTelemetry + Prometheus/Grafana for observability
 
 ## Immediate Priorities
-1. Benchmark chunking strategies and set environment-specific defaults.
-2. Expand sentiment scoring beyond keyword lexicon baseline.
-3. Add historical evaluation for recommendation quality over time.
+1. Add historical evaluation for recommendation quality over time.
+2. Improve recommendation and sentiment calibration dashboards.
+3. Implement connector-backed news/filings ingestion jobs.

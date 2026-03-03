@@ -145,6 +145,8 @@ def test_sentiment_compute_endpoint():
         assert compute.status_code == 200
         body = compute.json()
         assert body["rows_written"] >= 1
+        assert "provider_counts" in body
+        assert len(body["provider_counts"]) >= 1
 
     with SessionLocal() as session:
         total = session.scalar(

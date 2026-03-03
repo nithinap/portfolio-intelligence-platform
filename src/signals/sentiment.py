@@ -1,58 +1,21 @@
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
+from src.common.settings import get_settings
 from src.core.models import Document, Signal
-
-POSITIVE_WORDS = {
-    "strong",
-    "improved",
-    "growth",
-    "accelerated",
-    "record",
-    "gain",
-    "beat",
-    "positive",
-    "upside",
-    "expansion",
-}
-
-NEGATIVE_WORDS = {
-    "weak",
-    "decline",
-    "slowed",
-    "drop",
-    "miss",
-    "negative",
-    "downside",
-    "risk",
-    "contraction",
-    "loss",
-}
+from src.signals.sentiment_scoring import score_with_fallback
 
 
 @dataclass
 class SentimentAggregationResult:
     rows_written: int
     tickers_processed: int
-
-
-def _tokenize(text: str) -> list[str]:
-    return re.findall(r"[a-zA-Z]{3,}", text.lower())
-
-
-def _score_text(text: str) -> float:
-    terms = _tokenize(text)
-    if not terms:
-        return 0.0
-    pos = sum(1 for term in terms if term in POSITIVE_WORDS)
-    neg = sum(1 for term in terms if term in NEGATIVE_WORDS)
-    return (pos - neg) / len(terms)
+    provider_counts: dict[str, int]
 
 
 def compute_daily_sentiment_signals(
@@ -63,6 +26,7 @@ def compute_daily_sentiment_signals(
     date_from: datetime | None = None,
     date_to: datetime | None = None,
 ) -> SentimentAggregationResult:
+    settings = get_settings()
     stmt: Select = select(Document).where(Document.ticker.is_not(None))
     if ticker:
         stmt = stmt.where(Document.ticker == ticker.upper())
@@ -75,13 +39,25 @@ def compute_daily_sentiment_signals(
 
     docs = session.scalars(stmt.limit(1000)).all()
     if not docs:
-        return SentimentAggregationResult(rows_written=0, tickers_processed=0)
+        return SentimentAggregationResult(
+            rows_written=0, tickers_processed=0, provider_counts={}
+        )
 
     grouped: dict[str, list[float]] = {}
+    provider_counts: dict[str, int] = {}
     for doc in docs:
         if not doc.ticker:
             continue
-        grouped.setdefault(doc.ticker, []).append(_score_text(doc.content))
+        scored = score_with_fallback(
+            doc.content,
+            primary_provider=settings.sentiment_provider,
+            openai_api_key=settings.openai_api_key,
+            openai_model=settings.sentiment_openai_model,
+            openai_base_url=settings.sentiment_openai_base_url,
+            openai_timeout_seconds=settings.sentiment_openai_timeout_seconds,
+        )
+        grouped.setdefault(doc.ticker, []).append(scored.value)
+        provider_counts[scored.provider_used] = provider_counts.get(scored.provider_used, 0) + 1
 
     rows_written = 0
     as_of = datetime.now(UTC)
@@ -103,10 +79,15 @@ def compute_daily_sentiment_signals(
                     "score_max": round(max(scores), 6),
                     "dispersion": round(dispersion, 6),
                     "source_filter": source,
+                    "sentiment_provider": settings.sentiment_provider,
                 },
             )
         )
         rows_written += 1
 
     session.commit()
-    return SentimentAggregationResult(rows_written=rows_written, tickers_processed=len(grouped))
+    return SentimentAggregationResult(
+        rows_written=rows_written,
+        tickers_processed=len(grouped),
+        provider_counts=provider_counts,
+    )
