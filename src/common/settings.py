@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     )
     vector_db_provider: str = Field(default="pgvector", alias="VECTOR_DB_PROVIDER")
     vector_db_url: str | None = Field(default=None, alias="VECTOR_DB_URL")
+    qa_answer_provider: str = Field(default="deterministic", alias="QA_ANSWER_PROVIDER")
+    qa_openai_model: str = Field(default="gpt-4o-mini", alias="QA_OPENAI_MODEL")
+    qa_openai_base_url: str = Field(default="https://api.openai.com/v1", alias="QA_OPENAI_BASE_URL")
+    qa_openai_timeout_seconds: int = Field(default=20, alias="QA_OPENAI_TIMEOUT_SECONDS")
+    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     embedding_provider: str = Field(default="sparse-local", alias="EMBEDDING_PROVIDER")
     retrieval_provider: str = Field(default="sparse-local", alias="RETRIEVAL_PROVIDER")
     chunker_provider: str = Field(default="simple", alias="CHUNKER_PROVIDER")
@@ -54,6 +59,10 @@ def get_settings() -> Settings:
         "DATABASE_URL": yaml_cfg.get("database_url"),
         "VECTOR_DB_PROVIDER": yaml_cfg.get("vector_db_provider"),
         "VECTOR_DB_URL": yaml_cfg.get("vector_db_url"),
+        "QA_ANSWER_PROVIDER": yaml_cfg.get("qa_answer_provider"),
+        "QA_OPENAI_MODEL": yaml_cfg.get("qa_openai_model"),
+        "QA_OPENAI_BASE_URL": yaml_cfg.get("qa_openai_base_url"),
+        "QA_OPENAI_TIMEOUT_SECONDS": yaml_cfg.get("qa_openai_timeout_seconds"),
         "EMBEDDING_PROVIDER": yaml_cfg.get("embedding_provider"),
         "RETRIEVAL_PROVIDER": yaml_cfg.get("retrieval_provider"),
         "CHUNKER_PROVIDER": yaml_cfg.get("chunker_provider"),

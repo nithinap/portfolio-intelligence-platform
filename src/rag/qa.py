@@ -5,6 +5,12 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
+from src.common.settings import get_settings
+from src.rag.answer_generation import (
+    DeterministicAnswerGenerator,
+    SourceContext,
+    get_answer_generator,
+)
 from src.rag.retrieval import retrieve_chunks
 
 
@@ -23,6 +29,7 @@ class Citation:
 class QaResult:
     answer: str
     confidence: float
+    answer_provider: str
     citations: list[Citation]
 
 
@@ -36,6 +43,7 @@ def answer_question(
     date_from: datetime | None = None,
     date_to: datetime | None = None,
 ) -> QaResult:
+    settings = get_settings()
     retrieved = retrieve_chunks(
         session,
         question,
@@ -50,6 +58,7 @@ def answer_question(
         return QaResult(
             answer="No supporting documents matched the request filters and query terms.",
             confidence=0.05,
+            answer_provider="none",
             citations=[],
         )
 
@@ -67,8 +76,38 @@ def answer_question(
             )
         )
 
-    summary_lines = [f"- {c.excerpt}" for c in citations[:3]]
-    answer = "Grounded summary from retrieved documents:\n" + "\n".join(summary_lines)
+    contexts = [
+        SourceContext(
+            chunk_id=c.chunk_id,
+            source=c.source,
+            ticker=c.ticker,
+            published_at=c.published_at,
+            excerpt=c.excerpt,
+        )
+        for c in citations
+    ]
+    configured_provider = settings.qa_answer_provider.strip().lower()
+    generator = get_answer_generator(
+        configured_provider,
+        openai_api_key=settings.openai_api_key,
+        openai_model=settings.qa_openai_model,
+        openai_base_url=settings.qa_openai_base_url,
+        openai_timeout_seconds=settings.qa_openai_timeout_seconds,
+    )
+    answer = generator.generate(question, contexts)
+    answer_provider = configured_provider
+    if not answer:
+        fallback = DeterministicAnswerGenerator()
+        answer = fallback.generate(question, contexts) or (
+            "No grounded evidence was available to answer this question."
+        )
+        answer_provider = "deterministic-fallback"
+
     best_score = max(c.score for c in citations)
     confidence = min(0.95, round(0.35 + (0.1 * len(citations)) + (0.35 * best_score), 3))
-    return QaResult(answer=answer, confidence=confidence, citations=citations)
+    return QaResult(
+        answer=answer,
+        confidence=confidence,
+        answer_provider=answer_provider,
+        citations=citations,
+    )

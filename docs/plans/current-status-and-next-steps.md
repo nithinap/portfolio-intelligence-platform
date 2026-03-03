@@ -1,6 +1,6 @@
 # Current Status And Next Steps
 
-Last updated: 2026-03-01 22:35:24 MST
+Last updated: 2026-03-02 15:41:08 MST
 
 ## Progress Summary
 
@@ -38,6 +38,9 @@ Last updated: 2026-03-01 22:35:24 MST
   - Configurable via environment/profile settings.
 - Added grounded QA service and API route:
   - `POST /qa` returns answer, confidence, and citations.
+- Added model-backed QA generation option:
+  - Configurable provider (`deterministic` or `openai`) with grounded prompt constraints.
+  - Automatic deterministic fallback when provider call fails or API key is missing.
 - Added QA evaluation checks:
   - `POST /qa/evaluate` returns pass rate, citation coverage, and per-case failures.
 - Added sentiment signal baseline:
@@ -65,8 +68,8 @@ Last updated: 2026-03-01 22:35:24 MST
 ## What Is Not Built Yet
 - Real market/news/filings connectors (current jobs are stubs).
 - Real embedding model calls and vector index writes.
-- LLM answer generation for QA (current answer synthesis is deterministic).
-- Sentiment pipeline and Phase 1 evaluation framework.
+- Model-backed sentiment scoring and calibration framework.
+- Recommendation outcome evaluation and drift tracking.
 - Phase 2+ modules (signals/agents/policy/risk/execution/backtesting/monitoring logic).
 
 ## Next Steps / Task Backlog
@@ -75,16 +78,16 @@ Last updated: 2026-03-01 22:35:24 MST
 - Benchmark current chunking defaults on retrieval quality and latency.
 - Decide default provider by environment (`simple` for local, `token` for production).
 
-2. Add model-backed QA generation.
-- Keep citation and filter constraints as hard requirements.
-- Compare answer quality vs deterministic baseline.
-
-3. Improve sentiment scoring quality.
+2. Improve sentiment scoring quality.
 - Replace lexicon-only baseline with model-based scoring.
 - Add calibration and backtests for sentiment utility.
+
+3. Add recommendation quality evaluation over time.
+- Measure recommendation outcome against realized returns.
+- Track drift between expected and realized signal utility.
 
 ## Suggested Immediate Execution Order
 
 1. Chunking benchmark and default-provider decision.
-2. Model-backed QA generation with grounding constraints.
-3. Sentiment scoring upgrade and validation.
+2. Sentiment scoring upgrade and validation.
+3. Recommendation quality evaluation instrumentation.

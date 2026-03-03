@@ -1,3 +1,10 @@
+from src.rag.answer_generation import (
+    AnswerGenerator,
+    DeterministicAnswerGenerator,
+    OpenAIAnswerGenerator,
+    SourceContext,
+    get_answer_generator,
+)
 from src.rag.chunking import Chunk, Chunker, SimpleChunker, TokenChunker, get_chunker
 from src.rag.embeddings import (
     EmbeddingProvider,
@@ -19,6 +26,11 @@ __all__ = [
     "SparseEmbeddingProvider",
     "cosine_similarity_sparse",
     "get_embedding_provider",
+    "AnswerGenerator",
+    "DeterministicAnswerGenerator",
+    "OpenAIAnswerGenerator",
+    "SourceContext",
+    "get_answer_generator",
     "QaEvalCase",
     "QaEvalCaseResult",
     "QaEvalSummary",

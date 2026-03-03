@@ -74,6 +74,7 @@ class QaCitation(BaseModel):
 class QaResponse(BaseModel):
     answer: str
     confidence: float
+    answer_provider: str
     citations: list[QaCitation]
 
 
@@ -217,6 +218,7 @@ async def qa_route(
     return QaResponse(
         answer=result.answer,
         confidence=result.confidence,
+        answer_provider=result.answer_provider,
         citations=[
             QaCitation(
                 chunk_id=c.chunk_id,

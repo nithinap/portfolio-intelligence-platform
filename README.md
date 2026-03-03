@@ -13,6 +13,7 @@ Current capabilities:
 - FastAPI baseline endpoints: `/health/live`, `/health/ready`, `/version`, `/metrics`
 - Document ingestion with chunking: `POST /documents/ingest`
 - Grounded Q&A with citations and confidence: `POST /qa`
+- Configurable QA answer provider (`deterministic` or `openai`) with deterministic fallback
 - Sparse embedding retrieval with lexical fallback and ticker/source/date filtering
 - Chunker provider support (`simple` and `token`) with config-driven selection
 - Database migrations, seed data, scheduler framework, and job audit logging
@@ -78,6 +79,16 @@ curl -X POST http://localhost:8000/qa \
     "ticker": "AAPL",
     "top_k": 5
   }'
+```
+
+Optional `.env` settings for model-backed QA generation:
+
+```bash
+QA_ANSWER_PROVIDER=openai
+QA_OPENAI_MODEL=gpt-4o-mini
+QA_OPENAI_BASE_URL=https://api.openai.com/v1
+QA_OPENAI_TIMEOUT_SECONDS=20
+OPENAI_API_KEY=your_key_here
 ```
 
 Example QA evaluation request:
@@ -189,5 +200,5 @@ curl "http://localhost:8000/market/snapshots?ticker=AAPL&limit=10"
 
 ## Immediate Priorities
 1. Benchmark chunking strategies and set environment-specific defaults.
-2. Add model-based QA answer generation with grounding constraints.
-3. Expand sentiment scoring beyond keyword lexicon baseline.
+2. Expand sentiment scoring beyond keyword lexicon baseline.
+3. Add historical evaluation for recommendation quality over time.

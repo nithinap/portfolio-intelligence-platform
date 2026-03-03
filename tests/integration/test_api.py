@@ -73,6 +73,7 @@ def test_qa_endpoint_returns_citations():
         assert qa.status_code == 200
         body = qa.json()
         assert body["confidence"] > 0
+        assert body["answer_provider"] in {"deterministic", "deterministic-fallback", "openai"}
         assert len(body["citations"]) >= 1
 
 
