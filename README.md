@@ -198,6 +198,35 @@ curl "http://localhost:8000/market/snapshots?ticker=AAPL&limit=10"
 - Clear module boundaries (ingestion, reasoning, policy, risk, execution, evaluation).
 - Offline evaluation + paper trading gates before live automation.
 
+## System Architecture
+
+```mermaid
+flowchart LR
+    A["External Sources<br/>Market / News / Filings"] --> B["Ingestion Layer<br/>connectors + pipelines"]
+    B --> C["Storage Layer<br/>SQLite/Postgres tables + snapshots"]
+    C --> D["RAG Layer<br/>chunking + embeddings + retrieval"]
+    C --> E["Signals Layer<br/>sentiment + future factors"]
+    D --> F["QA & Evaluation APIs<br/>/qa, /qa/evaluate, /qa/chunking/benchmark"]
+    E --> G["Decision Tracking APIs<br/>recommendations + outcomes"]
+    C --> G
+    B --> H["Scheduler & Jobs<br/>run-jobs + audits"]
+    H --> C
+    F --> I["FastAPI Service"]
+    G --> I
+    I --> J["Client / Operator"]
+    I --> K["Observability<br/>logs + metrics + traces"]
+```
+
+## Core Components
+- `API Layer` (`src/api`): FastAPI routes for health, ingestion, QA, evaluations, market snapshots, sentiment compute, and recommendation outcomes.
+- `Ingestion Layer` (`src/data_ingestion`): connectors and pipelines for document ingestion and market snapshot jobs, with scheduler/audit integration.
+- `RAG Layer` (`src/rag`): chunkers (`simple`/`token`), embedding/retrieval, answer generation providers (`deterministic`/`openai`), and QA evaluation utilities.
+- `Signals Layer` (`src/signals`): sentiment scoring providers (`lexicon`/`openai` with fallback) and persisted sentiment signal aggregation.
+- `Core Domain` (`src/core`): SQLAlchemy models, recommendation outcome tracking, and business-level summary metrics (hit rate, calibration gap, drift).
+- `Platform Services` (`src/common`): settings/config profile loading, DB session wiring, bootstrap/migrations, structured logging, metrics, and tracing.
+- `Data & Migrations` (`data/`, `alembic/`): local storage, reproducible snapshots, and schema evolution for all persisted entities.
+- `Quality & Delivery` (`tests/`, `.github/workflows`): unit/integration coverage with CI lint/test gates.
+
 ## Folder Structure
 
 ```text
